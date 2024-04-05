@@ -12,21 +12,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SpotifyTutorialTrialRun"
         tools:targetApi="31">
-        <activity
-            android:name=".LoginActivity"
-            android:exported="true">
 
+        <!-- Declare WelcomeScreenActivity with the MAIN action and LAUNCHER category -->
+        <activity
+            android:name=".WelcomeActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-            <intent-filter>
-                <data android:host="auth" android:scheme="com.example.spotifytutorialtrialrun"/>
-            </intent-filter>
-
         </activity>
+
+        <!-- Declare LoginActivity without intent filters, as it's not the first screen -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true">
+        </activity>
+
+        <activity
+            android:name=".HomeActivity"
+            android:exported="true">
+        </activity>
+
     </application>
 
 </manifest>
-
