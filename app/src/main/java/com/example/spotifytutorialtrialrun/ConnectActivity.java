@@ -24,7 +24,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class ConnectActivity extends AppCompatActivity {
 
     public static final String CLIENT_ID = "c508aeecdc2f4dada9b98f8b7925bde8";
     public static final String REDIRECT_URI = "com.example.spotifytutorialtrialrun://auth";
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void getToken() {
         final AuthorizationRequest request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN);
-        AuthorizationClient.openLoginActivity(MainActivity.this, AUTH_TOKEN_REQUEST_CODE, request);
+        AuthorizationClient.openLoginActivity(ConnectActivity.this, AUTH_TOKEN_REQUEST_CODE, request);
     }
 
     /**
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void getCode() {
         final AuthorizationRequest request = getAuthenticationRequest(AuthorizationResponse.Type.CODE);
-        AuthorizationClient.openLoginActivity(MainActivity.this, AUTH_CODE_REQUEST_CODE, request);
+        AuthorizationClient.openLoginActivity(ConnectActivity.this, AUTH_CODE_REQUEST_CODE, request);
     }
 
 
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.d("HTTP", "Failed to fetch data: " + e);
-                Toast.makeText(MainActivity.this, "Failed to fetch data, watch Logcat for more details",
+                Toast.makeText(ConnectActivity.this, "Failed to fetch data, watch Logcat for more details",
                         Toast.LENGTH_SHORT).show();
             }
 
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                     setTextAsync(jsonObject.toString(3), profileTextView);
                 } catch (JSONException e) {
                     Log.d("JSON", "Failed to parse data: " + e);
-                    Toast.makeText(MainActivity.this, "Failed to parse data, watch Logcat for more details",
+                    Toast.makeText(ConnectActivity.this, "Failed to parse data, watch Logcat for more details",
                             Toast.LENGTH_SHORT).show();
                 }
             }

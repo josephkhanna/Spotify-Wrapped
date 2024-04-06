@@ -1,5 +1,6 @@
 package com.example.spotifytutorialtrialrun;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -50,13 +51,15 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
+         */
         settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Handle settings button click
+                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+                startActivity(intent);
             }
         });
-
+        /*
         wrappedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
