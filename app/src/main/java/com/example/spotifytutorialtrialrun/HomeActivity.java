@@ -59,13 +59,13 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        /*
+
         wrappedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Handle wrapped button click
+                Intent intent = new Intent(HomeActivity.this, WrappedActivity.class);
+                startActivity(intent);
             }
         });
-        */
     }
 }

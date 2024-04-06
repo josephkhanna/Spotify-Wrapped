@@ -95,6 +95,26 @@ public class SettingsActivity extends Activity {
             }
 
         }));
+
+        signoutbutton = findViewById(R.id.signoutbutton);
+        signoutbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Sign out from Firebase
+                FirebaseAuth.getInstance().signOut();
+
+                // Invalidate the Spotify access token
+                invalidateSpotifyAccessToken();
+
+                usernameTextView.setText("N/A : Not connected.");
+                emailTextView.setText("N/A : Not connected.");
+
+                // Redirect to the login activity
+                Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
     }
     private AuthorizationRequest getAuthenticationRequest(AuthorizationResponse.Type type) {
         return new AuthorizationRequest.Builder(CLIENT_ID, type, REDIRECT_URI)
@@ -223,6 +243,28 @@ public class SettingsActivity extends Activity {
                     }
                 }
             });
+        }
+    }
+    private void invalidateSpotifyAccessToken() {
+        // Get a reference to the database
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+        // Get the current Firebase user
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+
+            DatabaseReference myRef = database.getReference("users/" + userId + "/tokens");
+
+            // Create a map to store the tokens
+            Map<String, String> tokens = new HashMap<>();
+            tokens.put("accessToken", null);
+
+            // Save the user to Firebase
+            myRef.setValue(tokens);
+        } else {
+            Toast.makeText(SettingsActivity.this, "ERROR! Not logged in.",
+                    Toast.LENGTH_SHORT).show();
         }
     }
     private void getCurrentUserId(String accessToken) {
