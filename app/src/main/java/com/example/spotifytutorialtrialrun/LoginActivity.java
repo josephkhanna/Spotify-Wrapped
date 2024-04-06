@@ -75,7 +75,6 @@ public class LoginActivity extends Activity {
                         }
                     }
                 });
-        Toast.makeText(this, "Login attempted with email: " + email, Toast.LENGTH_SHORT).show();
     }
 
     private void signup() {
@@ -97,7 +96,6 @@ public class LoginActivity extends Activity {
                         }
                     }
                 });
-        Toast.makeText(this, "Sign-up attempted with email: " + email, Toast.LENGTH_SHORT).show();
     }
 
 
