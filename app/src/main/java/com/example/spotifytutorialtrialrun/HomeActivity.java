@@ -26,7 +26,14 @@ public class HomeActivity extends AppCompatActivity {
         gameButton = findViewById(R.id.gamebutton);
         settingsButton = findViewById(R.id.settingsbutton);
         wrappedButton = findViewById(R.id.wrappedbutton);
+        historyButton.setOnClickListener(new View.OnClickListener() {
 
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HomeActivity.this, YearsActivity.class);
+                startActivity(intent);
+            }
+        });
         // Set up click listeners for each button
         // Commented out for now, uncomment and fill in with appropriate logic when needed
         /*
