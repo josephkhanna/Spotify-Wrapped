@@ -29,14 +29,15 @@ public class HomeActivity extends AppCompatActivity {
 
         // Set up click listeners for each button
         // Commented out for now, uncomment and fill in with appropriate logic when needed
-        /*
+
         friendsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Handle friends button click
+                Intent intent = new Intent(HomeActivity.this, FriendsActivity.class);
+                startActivity(intent);
             }
         });
-
+        /*
         historyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

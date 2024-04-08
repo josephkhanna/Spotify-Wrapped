@@ -44,6 +44,21 @@
             android:exported="true">
         </activity>
 
+        <activity
+            android:name=".FriendsActivity"
+            android:exported="true">
+        </activity>
+
+        <activity
+            android:name=".InviteFriendsActivity"
+            android:exported="true">
+        </activity>
+
+        <activity
+            android:name=".FriendRequestsActivity"
+            android:exported="true">
+        </activity>
+
     </application>
 
 </manifest>

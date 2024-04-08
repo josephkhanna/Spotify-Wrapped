@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/invitefriendsbutton"
+        android:layout_width="178dp"
+        android:layout_height="65dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="#009688"
+        android:text="Invite"
+        android:textSize="30sp"
+        app:iconTint="#C59F9F"
+        app:layout_constraintEnd_toStartOf="@id/friendrequestsbutton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/friendrequestsbutton"
+        android:layout_width="184dp"
+        android:layout_height="65dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginEnd="32dp"
+        android:backgroundTint="#009688"
+        android:text="Requests"
+        android:textSize="30sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/invitefriendsbutton"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/friendsbackbutton"
+        android:layout_width="385dp"
+        android:layout_height="51dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#009688"
+        android:text="Back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ListView
+        android:id="@+id/friends_list"
+        android:layout_width="786dp"
+        android:layout_height="791dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:divider="@android:color/darker_gray"
+        android:dividerHeight="0.5dp"
+        android:listSelector="@android:color/darker_gray"
+        app:layout_constraintBottom_toTopOf="@+id/friendsbackbutton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/invitefriendsbutton" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
