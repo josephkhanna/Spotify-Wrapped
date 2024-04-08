@@ -8,6 +8,12 @@
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+    <string-array name="input_options">
+        <item>COUNTRY</item>
+        <item>POP</item>
+        <item>RAP</item>
+        <item>METAL</item>
+    </string-array>
 
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
