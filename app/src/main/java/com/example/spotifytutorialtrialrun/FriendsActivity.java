@@ -4,13 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 
 
-import androidx.appcompat.app.AppCompatActivity;
 
-public class FriendsActivity extends AppCompatActivity {
+public class FriendsActivity extends Activity {
     private Button friendsbackbutton;
     private Button invitefriendsbutton;
     private Button friendrequestsbutton;
@@ -44,6 +42,5 @@ public class FriendsActivity extends AppCompatActivity {
             }
         });
     }
-
 }
 

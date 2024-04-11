@@ -16,8 +16,8 @@ public class InviteFriendsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.invitefriends);
         invitefriendsbackbutton = findViewById(R.id.invitefriendsbackbutton);
-        emailEditText = findViewById(R.id.email_edit_text); // replace with your actual EditText ID
-        sendRequestButton = findViewById(R.id.send_request_button); // replace with your actual Button ID
+        emailEditText = findViewById(R.id.email_edit_text);
+        sendRequestButton = findViewById(R.id.send_request_button);
 
         invitefriendsbackbutton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -31,7 +31,6 @@ public class InviteFriendsActivity extends Activity {
             @Override
             public void onClick(View v) {
                 String email = emailEditText.getText().toString();
-                // TODO: Send the email to your backend server to process the friend request
             }
         });
     }

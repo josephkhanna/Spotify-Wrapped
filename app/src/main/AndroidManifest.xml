@@ -59,6 +59,21 @@
             android:exported="true">
         </activity>
 
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="true">
+        </activity>
+
+        <activity
+            android:name=".PastWrappedActivity"
+            android:exported="true">
+        </activity>
+
+        <activity
+            android:name=".ChangePasswordActivity"
+            android:exported="true">
+        </activity>
+
     </application>
 
 </manifest>
