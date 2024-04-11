@@ -169,6 +169,8 @@ public class WrappedActivity extends Activity {
         java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMMM d, yyyy", java.util.Locale.getDefault());
         String currentDate = dateFormat.format(calendar.getTime());
 
+
+
         dateTextView.setText(currentDate);
 
         wrappedbackbutton.setOnClickListener(new View.OnClickListener() {

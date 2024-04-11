@@ -5,7 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#2D312D"
-    android:backgroundTint="#000000">
+    android:backgroundTint="#000000"><![CDATA[
+
+    />
+
+    ]]>
 
     <Button
         android:id="@+id/wrappedbackbutton"
@@ -84,4 +88,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/artistRecyclerView" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

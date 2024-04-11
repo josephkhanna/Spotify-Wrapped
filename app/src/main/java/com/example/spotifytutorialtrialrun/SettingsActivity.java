@@ -64,12 +64,33 @@ public class SettingsActivity extends Activity {
         usernameTextView.setText("N/A : Not connected.");
         emailTextView.setText("N/A :Not connected.");
 
+        getAccessToken(new FirebaseCallback() {
+            public void onCallback(String accessToken) {
+                if (accessToken != null) {
+                    getSpotifyUsername(accessToken);
+                } else {
+                    Log.e("SettingsActivity", "Error getting access token from Firebase");
+                }
+            }
+        });
+
+
         SharedPreferences sharedPreferences = getSharedPreferences("SPOTIFY", 0);
         String spotifyUsername = sharedPreferences.getString("username", "N/A : Not connected.");
         String email = sharedPreferences.getString("email", "N/A : Not connected.");
+        emailTextView.setText(email);
+
+        FirebaseUser user1 = FirebaseAuth.getInstance().getCurrentUser();
+        if (user1 != null) {
+            String email1 = user1.getEmail();
+            emailTextView.setText(email1);
+        } else {
+            emailTextView.setText("N/A : Not connected.");
+        }
+
+
 
         usernameTextView.setText(spotifyUsername);
-        emailTextView.setText(email);
 
         signoutbutton = findViewById(R.id.signoutbutton);
         deleteaccountbutton = findViewById(R.id.deleteaccountbutton);
