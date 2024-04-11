@@ -2,6 +2,7 @@ package com.example.spotifytutorialtrialrun;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -168,6 +170,23 @@ public class WrappedActivity extends Activity {
         java.util.Calendar calendar = java.util.Calendar.getInstance();
         java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMMM d, yyyy", java.util.Locale.getDefault());
         String currentDate = dateFormat.format(calendar.getTime());
+
+        if(currentDate.contains("Decemeber 25")) {
+            setContentView(R.layout.wrapped_christmas);
+        } else if (currentDate.contains("October 31")) {
+            setContentView(R.layout.wrapped_halloween);
+        } else if(currentDate.contains("July 4")) {
+            setContentView(R.layout.wrapped_independence);
+        } else if(currentDate.contains("January 1")) {
+            setContentView(R.layout.wrapped_newyear);
+        } else if ((calendar.get(Calendar.DAY_OF_WEEK) == 5) && currentDate.contains("November")) {
+            if(currentDate.contains("22") || currentDate.contains("23") || currentDate.contains("24") || currentDate.contains("25") ||
+                    currentDate.contains("26") || currentDate.contains("27") || currentDate.contains("28")) {
+                setContentView(R.layout.wrapped_thanksgiving);
+            }
+        }
+
+
 
         dateTextView.setText(currentDate);
 
