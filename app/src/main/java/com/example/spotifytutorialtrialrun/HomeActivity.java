@@ -18,36 +18,34 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.homescreen); // Make sure you use the correct layout file name here
+        setContentView(R.layout.homescreen);
 
-        // Initialize buttons
         friendsButton = findViewById(R.id.friendsbutton);
         historyButton = findViewById(R.id.historybutton);
         gameButton = findViewById(R.id.gamebutton);
         settingsButton = findViewById(R.id.settingsbutton);
         wrappedButton = findViewById(R.id.wrappedbutton);
 
-        // Set up click listeners for each button
-        // Commented out for now, uncomment and fill in with appropriate logic when needed
-        /*
         friendsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Handle friends button click
+                Intent intent = new Intent(HomeActivity.this, FriendsActivity.class);
+                startActivity(intent);
             }
         });
 
         historyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Handle history button click
+                Intent intent = new Intent(HomeActivity.this, HistoryActivity.class);
+                startActivity(intent);
             }
         });
-
+        /*
         gameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Handle game button click
+                // we can uncomment this when the game is ready
             }
         });
 

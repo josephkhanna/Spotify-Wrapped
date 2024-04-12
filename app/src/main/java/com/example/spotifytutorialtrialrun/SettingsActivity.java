@@ -40,43 +40,63 @@ public class SettingsActivity extends Activity {
     private Button deleteaccountbutton;
     private Button settingsbackbutton;
     private Button linkbutton;
+    private Button changepasswordbutton;
     private TextView usernameTextView;
     private TextView emailTextView;
 
+
     private static final String CLIENT_ID = "c508aeecdc2f4dada9b98f8b7925bde8";
+    private static final String CLIENT_SECRET = "ec41420420774792b035e6e37871c3de";
     private static final String REDIRECT_URI = "com.example.spotifytutorialtrialrun://auth";
-    private static final int AUTH_TOKEN_REQUEST_CODE = 0x10; // Arbitrary request code
+    private static final int AUTH_TOKEN_REQUEST_CODE = 0x10;
+    private String token;
+    private String refreshToken;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.settings); // Make sure you use the correct layout file name here
+        setContentView(R.layout.settings);
 
-        // Initialize TextViews
         usernameTextView = findViewById(R.id.spotify_username);
         emailTextView = findViewById(R.id.user_email);
 
-        // Set initial text
         usernameTextView.setText("N/A : Not connected.");
         emailTextView.setText("N/A :Not connected.");
 
-        // Load the Spotify username and email from SharedPreferences
+        getAccessToken(new FirebaseCallback() {
+            public void onCallback(String accessToken) {
+                if (accessToken != null) {
+                    getSpotifyUsername(accessToken);
+                } else {
+                    Log.e("SettingsActivity", "Error getting access token from Firebase");
+                }
+            }
+        });
+
+
         SharedPreferences sharedPreferences = getSharedPreferences("SPOTIFY", 0);
         String spotifyUsername = sharedPreferences.getString("username", "N/A : Not connected.");
         String email = sharedPreferences.getString("email", "N/A : Not connected.");
-
-        // Set the text
-        usernameTextView.setText(spotifyUsername);
         emailTextView.setText(email);
 
-        // Initialize buttons
+        FirebaseUser user1 = FirebaseAuth.getInstance().getCurrentUser();
+        if (user1 != null) {
+            String email1 = user1.getEmail();
+            emailTextView.setText(email1);
+        } else {
+            emailTextView.setText("N/A : Not connected.");
+        }
+
+
+
+        usernameTextView.setText(spotifyUsername);
+
         signoutbutton = findViewById(R.id.signoutbutton);
         deleteaccountbutton = findViewById(R.id.deleteaccountbutton);
         settingsbackbutton = findViewById(R.id.settingsbackbutton);
         linkbutton = findViewById(R.id.linkbutton);
-
-        // Set up click listeners for each button
+        changepasswordbutton = findViewById(R.id.changepasswordbutton);
 
         settingsbackbutton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,34 +111,64 @@ public class SettingsActivity extends Activity {
             public void onClick(View v) {
                 AuthorizationRequest request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN);
                 AuthorizationClient.openLoginActivity(SettingsActivity.this, AUTH_TOKEN_REQUEST_CODE, request);
-           
             }
 
         }));
 
-        signoutbutton = findViewById(R.id.signoutbutton);
         signoutbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Sign out from Firebase
                 FirebaseAuth.getInstance().signOut();
-
-                // Invalidate the Spotify access token
                 invalidateSpotifyAccessToken();
 
                 usernameTextView.setText("N/A : Not connected.");
                 emailTextView.setText("N/A : Not connected.");
 
-                // Redirect to the login activity
+                SharedPreferences sharedPreferences = getSharedPreferences("SPOTIFY", 0);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.clear();
+                editor.apply();
+
                 Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
                 startActivity(intent);
                 finish();
             }
         });
+        deleteaccountbutton.setOnClickListener(v -> {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(user.getUid());
+                userRef.removeValue().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        //deletes account
+                        user.delete().addOnCompleteListener(deleteTask -> {
+                            if (deleteTask.isSuccessful()) {
+                                FirebaseAuth.getInstance().signOut();
+                                Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                            } else {
+                                Toast.makeText(SettingsActivity.this, "Failed to delete account.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(SettingsActivity.this, "Failed to delete account.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+        changepasswordbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SettingsActivity.this, ChangePasswordActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
     private AuthorizationRequest getAuthenticationRequest(AuthorizationResponse.Type type) {
-        return new AuthorizationRequest.Builder(CLIENT_ID, type, REDIRECT_URI)
-                .setScopes(new String[]{"user-read-private", "user-read-email"}) // Example scopes
+        return new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.CODE, REDIRECT_URI)
+                .setScopes(new String[]{"user-read-private", "user-read-email", "user-top-read"})
                 .build();
     }
 
@@ -128,37 +178,66 @@ public class SettingsActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
             final AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, data);
-            if (response.getType() == AuthorizationResponse.Type.TOKEN) {
-                // Use the token to perform API requests or store it in your database
-                String accessToken = response.getAccessToken();
-                //String refreshToken = getRefreshToken(response.getCode()); // Assuming you have this method
-                storeTokenInFirebase(accessToken);
+            if (response.getType() == AuthorizationResponse.Type.CODE) {
+                String authCode = response.getCode();
+                exchangeCodeForToken(authCode);
                 Toast.makeText(SettingsActivity.this, "Connected!", Toast.LENGTH_SHORT).show();
-                // Set Spotify username and email
-                // You need to implement getSpotifyUsername() and getEmail() methods
-                getSpotifyUsername(response.getAccessToken());
-                getEmail();
             }
         }
     }
 
+    private void exchangeCodeForToken(String authCode) {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                OkHttpClient client = new OkHttpClient();
 
-    private void storeTokenInFirebase(String accessToken) {
-        // Get a reference to the database
+                RequestBody formBody = new FormBody.Builder()
+                        .add("grant_type", "authorization_code")
+                        .add("code", authCode)
+                        .add("redirect_uri", REDIRECT_URI)
+                        .add("client_id", CLIENT_ID)
+                        .add("client_secret", CLIENT_SECRET)
+                        .build();
+
+                Request request = new Request.Builder()
+                        .url("https://accounts.spotify.com/api/token")
+                        .post(formBody)
+                        .build();
+
+                try (Response response = client.newCall(request).execute()) {
+                    String body = response.body().string();
+                    JSONObject jsonObject = new JSONObject(body);
+                    String accessToken = jsonObject.getString("access_token");
+                    String refreshToken = jsonObject.getString("refresh_token");
+                    storeTokenInFirebase(accessToken, refreshToken);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+
+    private void storeTokenInFirebase(String accessToken, String refreshToken) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-        // Get the current Firebase user
+        Log.d("storeTokenInFirebase", "Access Token: " + accessToken);
+        Log.d("storeTokenInFirebase", "Refresh Token: " + refreshToken);
+
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String userId = user.getUid();
 
             DatabaseReference myRef = database.getReference("users/" + userId + "/tokens");
-
-            // Create a map to store the tokens
             Map<String, String> tokens = new HashMap<>();
             tokens.put("accessToken", accessToken);
+            tokens.put("refreshToken", refreshToken);
+            myRef.setValue(tokens)
+                    .addOnSuccessListener(aVoid -> Log.d("FirebaseWrite", "Tokens successfully written to Firebase."))
+                    .addOnFailureListener(e -> Log.e("FirebaseWrite", "Failed to write tokens to Firebase.", e));
 
-            // Save the user to Firebase
             myRef.setValue(tokens);
         } else {
             Toast.makeText(SettingsActivity.this, "ERROR! Not logged in.",
@@ -184,23 +263,16 @@ public class SettingsActivity extends Activity {
                         throw new IOException("Unexpected code " + response);
                     }
 
-                    // Get the response body
                     String responseBody = response.body().string();
-
-                    // Log the response body
                     Log.d("SettingsActivity", "Response body: " + responseBody);
 
-                    // Parse the response body as JSON
                     JSONObject jsonObject = new JSONObject(responseBody);
-
-                    // Get the Spotify username from the JSON
                     final String spotifyUsername = jsonObject.getString("display_name");
-                    // Store the Spotify username in SharedPreferences
+
                     SharedPreferences sharedPreferences = getSharedPreferences("SPOTIFY", 0);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("username", spotifyUsername);
                     editor.apply();
-                    // Update the UI on the main thread
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -221,58 +293,105 @@ public class SettingsActivity extends Activity {
         });
     }
 
-    private void getEmail() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            final String email = user.getEmail();
+    //not used right now since we need to fix some things first. this should refresh the token though
+    private void refreshAccessToken(String refreshToken) {
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                OkHttpClient client = new OkHttpClient();
 
-            // Store the email in SharedPreferences
-            SharedPreferences sharedPreferences = getSharedPreferences("SPOTIFY", 0);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("email", email);
-            editor.apply();
+                RequestBody formBody = new FormBody.Builder()
+                        .add("grant_type", "refresh_token")
+                        .add("refresh_token", refreshToken)
+                        .add("client_id", CLIENT_ID)
+                        .add("client_secret", CLIENT_SECRET)
+                        .build();
 
-            // Update the emailTextView on the main thread
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (email != null) {
-                        emailTextView.setText(email);
-                    } else {
-                        emailTextView.setText("Error getting email");
-                    }
+                Request request = new Request.Builder()
+                        .url("https://accounts.spotify.com/api/token")
+                        .post(formBody)
+                        .build();
+
+                try (Response response = client.newCall(request).execute()) {
+                    String body = response.body().string();
+                    JSONObject jsonObject = new JSONObject(body);
+                    String newAccessToken = jsonObject.getString("access_token");
+                    storeNewAccessTokenInFirebase(newAccessToken);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
                 }
-            });
-        }
+            }
+        });
     }
-    private void invalidateSpotifyAccessToken() {
-        // Get a reference to the database
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-        // Get the current Firebase user
+    private void storeNewAccessTokenInFirebase(String newAccessToken) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String userId = user.getUid();
-
             DatabaseReference myRef = database.getReference("users/" + userId + "/tokens");
-
-            // Create a map to store the tokens
-            Map<String, String> tokens = new HashMap<>();
-            tokens.put("accessToken", null);
-
-            // Save the user to Firebase
-            myRef.setValue(tokens);
+            myRef.child("accessToken").setValue(newAccessToken);
         } else {
             Toast.makeText(SettingsActivity.this, "ERROR! Not logged in.",
                     Toast.LENGTH_SHORT).show();
         }
     }
-    private void getCurrentUserId(String accessToken) {
-        //
+    private void invalidateSpotifyAccessToken() {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+            DatabaseReference myRef = database.getReference("users/" + userId + "/tokens");
+            Map<String, String> tokens = new HashMap<>();
+            tokens.put("accessToken", null);
+            myRef.child("accessToken").setValue(null);
+        } else {
+            Toast.makeText(SettingsActivity.this, "ERROR! Not logged in.",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private void storeUserIdAndTokenInFirebase(String userId, String token) {
+    public interface FirebaseCallback {
+        void onCallback(String value);
+    }
+    public static void getRefreshToken(FirebaseCallback firebaseCallback) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
 
-        //
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference("users/" + userId + "/tokens/refreshToken");
+
+            myRef.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String refreshToken = String.valueOf(task.getResult().getValue());
+                    firebaseCallback.onCallback(refreshToken);
+                } else {
+                    Log.e("Firebase", "Error getting refresh token", task.getException());
+                }
+            });
+        } else {
+            Log.e("SettingsActivity", "ERROR! Not logged in.");
+        }
+    }
+
+    public static void getAccessToken(FirebaseCallback firebaseCallback) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference("users/" + userId + "/tokens/accessToken");
+
+            myRef.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String accessToken = String.valueOf(task.getResult().getValue());
+                    firebaseCallback.onCallback(accessToken);
+                } else {
+                    Log.e("Firebase", "Error getting access token", task.getException());
+                }
+            });
+        } else {
+            Log.e("SettingsActivity", "ERROR! Not logged in.");
+        }
     }
 }

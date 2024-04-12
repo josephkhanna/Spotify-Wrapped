@@ -36,8 +36,8 @@ public class LoginActivity extends Activity {
         if (currentUser != null) {
             Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
             startActivity(intent);
-            finish(); // This closes the LoginActivity so it's not in the back stack
-            return; // Return here to prevent the rest of onCreate from executing
+            finish();
+            return;
         }
 
         emailEditText = (EditText) findViewById(R.id.email);
@@ -70,9 +70,7 @@ public class LoginActivity extends Activity {
                     @Override
                     public void onComplete(Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
                             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                            // Use the FirebaseUser object as needed
                             Toast.makeText(LoginActivity.this, "Authentication successful.",
                                     Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
@@ -95,9 +93,9 @@ public class LoginActivity extends Activity {
                     @Override
                     public void onComplete(Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign up success, update UI with the signed-up user's information
                             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                            // Use the FirebaseUser object as needed
+                            Toast.makeText(LoginActivity.this, "Sign-up successful.",
+                                    Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(LoginActivity.this, "Sign-up failed.",
                                     Toast.LENGTH_SHORT).show();
