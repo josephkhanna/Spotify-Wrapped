@@ -2,7 +2,8 @@ package com.example.spotifytutorialtrialrun;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,7 +32,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -55,11 +55,11 @@ public class WrappedActivity extends Activity {
     private RecyclerView songRecyclerView;
     private TextView dateTextView;
     private String token;
+    private MediaPlayer mediaPlayer;
     private List<Artist> topArtists = new ArrayList<>();
     private List<Song> topSongs = new ArrayList<>();
 
 
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wrapped);
@@ -67,7 +67,6 @@ public class WrappedActivity extends Activity {
         Log.d("on create", "works");
         initFirebase();
         SettingsActivity.getAccessToken(new SettingsActivity.FirebaseCallback() {
-            @Override
             public void onCallback(String value) {
                 token = value;
                 Log.d("TokenUpdate", "Token updated: " + token);
@@ -75,7 +74,6 @@ public class WrappedActivity extends Activity {
         });
 
         SettingsActivity.getRefreshToken(new SettingsActivity.FirebaseCallback() {
-            @Override
             public void onCallback(String value) {
                 refreshToken = value;
             }
@@ -87,8 +85,7 @@ public class WrappedActivity extends Activity {
         songRecyclerView = findViewById(R.id.songRecyclerView);
 
         topArtists.add(new Artist("No Artists Found", "https://static.thenounproject.com/png/1077596-200.png"));
-        topSongs.add(new Song("No Songs Found", "https://static.thenounproject.com/png/1077596-200.png"));
-
+        topSongs.add(new Song("No Songs Found", "https://static.thenounproject.com/png/1077596-200.png", "android.resource://com.example.spotifytutorialtrialrun/" + R.raw.silence));
         LinearLayoutManager artistLayoutManager = new LinearLayoutManager(this);
         artistRecyclerView.setLayoutManager(artistLayoutManager);
 
@@ -97,14 +94,12 @@ public class WrappedActivity extends Activity {
 
 
         artistRecyclerView.setAdapter(new RecyclerView.Adapter() {
-            @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                 View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.wrappedartistitems, parent, false);
                 return new RecyclerView.ViewHolder(view) {
                 };
             }
 
-            @Override
             public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
                 TextView nameTextView = holder.itemView.findViewById(R.id.nameTextView);
                 ImageView imageView = holder.itemView.findViewById(R.id.imageView);
@@ -122,22 +117,18 @@ public class WrappedActivity extends Activity {
                             .into(imageView);
                 }
             }
-
-            @Override
             public int getItemCount() {
                 return topArtists.size();
             }
         });
 
         songRecyclerView.setAdapter(new RecyclerView.Adapter() {
-            @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                 View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.wrappedsongitems, parent, false);
                 return new RecyclerView.ViewHolder(view) {
                 };
             }
 
-            @Override
             public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
                 TextView nameTextView = holder.itemView.findViewById(R.id.nameTextView);
                 ImageView imageView = holder.itemView.findViewById(R.id.imageView);
@@ -155,13 +146,13 @@ public class WrappedActivity extends Activity {
                             .into(imageView);
                 }
             }
-
-            @Override
             public int getItemCount() {
                 return topSongs.size();
             }
         });
-        fetchUserData();
+
+        //fetchUserData();
+        //keeping this commented bc it seems like its breaking something
 
         saveWrappedData();
 
@@ -174,33 +165,35 @@ public class WrappedActivity extends Activity {
         dateTextView.setText(currentDate);
 
         wrappedbackbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
             public void onClick(View v) {
+                if (mediaPlayer != null) {
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.stop();
+                    }
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
                 Intent intent = new Intent(WrappedActivity.this, HomeActivity.class);
                 startActivity(intent);
             }
         });
+
     }
+
 
     private void initFirebase() {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-        Log.d("FirebaseInit", "Attempting to fetch token and refresh token");
         mDatabase.child("users").child(mAuth.getCurrentUser().getUid()).child("tokens").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                Map<String, String> tokens = (Map<String, String>) task.getResult().getValue();
-                token = tokens.get("accessToken");
-                String refreshToken = tokens.get("refreshToken");
-                Log.d("FirebaseInit", "Token fetch successful: " + token);
-                fetchUserData();
-
-                if (token == null) {
+            Map<String, String> tokens = (Map<String, String>) task.getResult().getValue();
+            token = tokens.get("accessToken");
+            String refreshToken = tokens.get("refreshToken");
+            fetchUserData();
+            if (token == null) {
                     //SettingsActivity.refreshAccessToken(refreshToken);
                     //Commented out bc we need to fix
                 }
-            } else {
-                Log.e("FirebaseInit", "Token fetch failed", task.getException());
-            }
+
         });
     }
 
@@ -211,26 +204,21 @@ public class WrappedActivity extends Activity {
 
     private void refreshAccessToken() {
         SettingsActivity.getRefreshToken(new SettingsActivity.FirebaseCallback() {
-            @Override
             public void onCallback(String value) {
                 refreshToken = value;
                 executorService.execute(new Runnable() {
-                    @Override
                     public void run() {
                         OkHttpClient client = new OkHttpClient();
-
                         RequestBody formBody = new FormBody.Builder()
                                 .add("grant_type", "refresh_token")
                                 .add("refresh_token", refreshToken)
                                 .add("client_id", CLIENT_ID)
                                 .add("client_secret", CLIENT_SECRET)
                                 .build();
-
                         Request request = new Request.Builder()
                                 .url("https://accounts.spotify.com/api/token")
                                 .post(formBody)
                                 .build();
-
                         try (Response response = client.newCall(request).execute()) {
                             String body = response.body().string();
                             JSONObject jsonObject = new JSONObject(body);
@@ -254,13 +242,12 @@ public class WrappedActivity extends Activity {
             DatabaseReference myRef = database.getReference("users/" + userId + "/tokens");
             myRef.child("accessToken").setValue(newAccessToken);
         } else {
-            Toast.makeText(WrappedActivity.this, "ERROR! Not logged in.",
+            Toast.makeText(WrappedActivity.this, "Error: Not logged in.",
                     Toast.LENGTH_SHORT).show();
         }
     }
 
     private void fetchUserData() {
-        Log.d("fetching", "we are in fetch method");
         fetchTopArtists();
         fetchTopSongs();
         testToken();
@@ -280,16 +267,14 @@ public class WrappedActivity extends Activity {
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
-            @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Log.e("SpotifyAPI", "Error fetching top artists", e);
             }
 
-            @Override
+
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     Log.e("SpotifyAPI", "Request failed: " + response.code() + ", " + response.message() + ", " + response.body().string());
-                    Log.d("SpotifyAPI", "Headers: " + request.headers());
                     return;
                 }
 
@@ -330,15 +315,15 @@ public class WrappedActivity extends Activity {
                 if (response.isSuccessful()) {
                     JSONObject jsonObject = new JSONObject(response.body().string());
                     JSONArray items = jsonObject.getJSONArray("items");
-                    Log.d("json_item", items.toString());
-                    Log.d("json_obj", jsonObject.toString());
 
                     topSongs.clear();
                     for (int i = 0; i < items.length(); i++) {
                         JSONObject item = items.getJSONObject(i);
                         String songName = item.getString("name");
                         String imageUrl = item.getJSONObject("album").getJSONArray("images").getJSONObject(0).getString("url");
-                        topSongs.add(new Song(songName, imageUrl));
+                        String previewUrl;
+                        previewUrl = item.getString("preview_url");
+                        topSongs.add(new Song(songName, imageUrl, previewUrl));
                         Log.d("Top Songs", topSongs.toString());
                     }
 
@@ -350,6 +335,16 @@ public class WrappedActivity extends Activity {
                         if (fetchedArtists) {
                             saveWrappedData();
                         }
+                       try{
+                           if (!topSongs.isEmpty()) {
+                               playSong(topSongs.get(0).getPreviewUrl());
+                               Toast.makeText(WrappedActivity.this, "Playing Preview - User has Premium", Toast.LENGTH_LONG).show();
+                           }
+                       } catch (Exception e) {
+                            Toast.makeText(WrappedActivity.this, "No Preview - User doesn't have Premium", Toast.LENGTH_LONG).show();
+                        }
+
+
                     });
                 } else if (response.code() == 401) {
                     refreshAccessToken();
@@ -359,6 +354,7 @@ public class WrappedActivity extends Activity {
             }
         });
     }
+
     private void testToken() {
         OkHttpClient client = new OkHttpClient();
 
@@ -402,4 +398,24 @@ public class WrappedActivity extends Activity {
             Toast.makeText(WrappedActivity.this, "Not logged in.", Toast.LENGTH_SHORT).show();
         }
     }
+    private void playSong(String url) {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+        }
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        try {
+            mediaPlayer.setDataSource(url);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+            mediaPlayer.setOnCompletionListener(mp -> mediaPlayer.release());
+        } catch (IOException e) {
+            Log.e("Error", "Error  playing audio", e);
+        }
+    }
 }
+
+

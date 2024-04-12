@@ -1,6 +1,8 @@
 package com.example.spotifytutorialtrialrun;
 
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
@@ -19,6 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +29,7 @@ public class HistoryActivity extends Activity {
     private List<Wrapped> wrappedList = new ArrayList<>();
     private Button historybackbutton;
     private WrappedHistoryAdapter adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,4 +84,5 @@ public class HistoryActivity extends Activity {
             }
         });
     }
+
 }

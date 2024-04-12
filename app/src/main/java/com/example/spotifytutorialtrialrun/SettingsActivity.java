@@ -111,7 +111,6 @@ public class SettingsActivity extends Activity {
             public void onClick(View v) {
                 AuthorizationRequest request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN);
                 AuthorizationClient.openLoginActivity(SettingsActivity.this, AUTH_TOKEN_REQUEST_CODE, request);
-           
             }
 
         }));

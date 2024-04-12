@@ -2,7 +2,10 @@ package com.example.spotifytutorialtrialrun;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,11 +25,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
+
 public class PastWrappedActivity extends Activity {
     private TextView dateTextView;
     private RecyclerView artistRecyclerView;
     private RecyclerView songRecyclerView;
-
+    private MediaPlayer mediaPlayer;
     private Button pastwrappedbackbutton;
 
     @Override
@@ -43,6 +48,13 @@ public class PastWrappedActivity extends Activity {
         loadWrappedData(date);
 
         pastwrappedbackbutton.setOnClickListener(v -> {
+            if (mediaPlayer != null) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
             Intent intent = new Intent(PastWrappedActivity.this, HistoryActivity.class);
             startActivity(intent);
         });
@@ -82,8 +94,7 @@ public class PastWrappedActivity extends Activity {
                                 artistNameTextView.setText(artist.getName());
                                 if (artist.getImageUrl() != null && !artist.getImageUrl().isEmpty()) {
                                     Glide.with(PastWrappedActivity.this).load(artist.getImageUrl()).into(artistImageView);
-                                }
-                            }
+                                }}
 
                             @Override
                             public int getItemCount() {
@@ -116,6 +127,14 @@ public class PastWrappedActivity extends Activity {
                                 return wrapped.getFavoriteSongs().size();
                             }
                         });
+                        try {
+                            if (!wrapped.getFavoriteSongs().isEmpty()) {
+                                playSong(wrapped.getFavoriteSongs().get(0).getPreviewUrl());
+                                Toast.makeText(PastWrappedActivity.this, "Playing Preview - User has Premium", Toast.LENGTH_LONG).show();
+                            }
+                        } catch (Exception e) {
+                            Toast.makeText(PastWrappedActivity.this, "No Preview - User doesn't have Premium", Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
 
@@ -126,6 +145,26 @@ public class PastWrappedActivity extends Activity {
             });
         } else {
             Toast.makeText(PastWrappedActivity.this, "Not logged in.", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+    private void playSong(String url) {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+        }
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        try {
+            mediaPlayer.setDataSource(url);
+            Log.d("MediaPlayer", "Data source set: " + url);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+            mediaPlayer.setOnCompletionListener(mp -> mediaPlayer.release());
+        } catch (IOException e) {
+            Log.e("MediaPlayer1", "Error setting data source or playing audio", e);
         }
     }
 }
