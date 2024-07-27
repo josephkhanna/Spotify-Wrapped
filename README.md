@@ -1,1 +1,2 @@
-# SpotifyWrapped - CS 2340 Project 2
+# Spotify Wrapped
+## Android App
